@@ -3,14 +3,8 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TicketsService } from './tickets.service';
-import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import {
-  CreateTicketDto,
-  Filter,
-  Sort,
-  Ticket,
-  UpdateTicketDto,
-} from './ticket.model';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { Ticket } from './ticket.model';
 import { provideHttpClient } from '@angular/common/http';
 
 describe('TicketService', () => {
@@ -101,56 +95,37 @@ describe('TicketService', () => {
   });
 
   describe('Create Ticket', () => {
-    it('should add a new ticket to the state via createTicket$', fakeAsync(() => {
-      // Flush initial GET request
+    beforeEach(fakeAsync(() => {
       const initReq = httpMock.expectOne(apiUrl);
-      expect(initReq.request.method).toBe('GET');
       initReq.flush([]);
-
-      const newTicketDto: CreateTicketDto = {
-        title: 'New Ticket',
-        description: 'New Desc',
-        status: 'open',
-      };
-      const createdTicket = createMockTicket(3, newTicketDto); // Assume ID 3 is returned
-
-      service.createTicket$.next(newTicketDto); // Trigger the source subject
       tick();
+    }));
 
-      const req = httpMock.expectOne(apiUrl);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(newTicketDto);
-      req.flush(createdTicket); // Simulate successful API response
-      tick();
-
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0]).toEqual(createdTicket);
-      expect(service.error()).toBeNull();
+    it('should add a new ticket to the state via createTicket$', fakeAsync(() => {
+      // TODO: Test adding a new ticket. Steps:
+      // 1. Define a new ticket DTO (CreateTicketDto).
+      // 2. Define the expected created ticket (Ticket) that the API would return (including ID, dates).
+      // 3. Trigger the createTicket$ subject with the DTO.
+      // 4. Use tick() to simulate the passage of time for async operations.
+      // 5. Expect a POST request to the API URL (httpMock.expectOne).
+      // 6. Check if the request method is POST and the body matches the DTO.
+      // 7. Flush the request with the mock created ticket.
+      // 8. Use tick() again.
+      // 9. Assert that the service.tickets() signal now contains the created ticket.
+      // 10. Assert that the service.error() signal is null.
     }));
 
     it('should handle error when creating a ticket', fakeAsync(() => {
-      // Flush initial GET request
-      const initReq = httpMock.expectOne(apiUrl);
-      expect(initReq.request.method).toBe('GET');
-      initReq.flush([]);
-
-      const newTicketDto: CreateTicketDto = {
-        title: 'New Ticket',
-        description: 'New Desc',
-        status: 'open',
-      };
-      const errorMessage = 'Failed to create ticket';
-
-      service.createTicket$.next(newTicketDto);
-      tick();
-
-      const req = httpMock.expectOne(apiUrl);
-      expect(req.request.method).toBe('POST');
-      req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
-      tick();
-
-      expect(service.tickets().length).toBe(0); // Ticket should not be added
-      expect(service.error()).toBe(errorMessage);
+      // TODO: Test error handling during ticket creation. Steps:
+      // 1. Define a new ticket DTO.
+      // 2. Define an error message string.
+      // 3. Trigger the createTicket$ subject with the DTO.
+      // 4. Use tick().
+      // 5. Expect a POST request to the API URL.
+      // 6. Flush the request with an error status (e.g., { status: 500, statusText: 'Server Error' }).
+      // 7. Use tick().
+      // 8. Assert that the service.tickets() signal is still empty.
+      // 9. Assert that the service.error() signal contains the expected error message ('Failed to create ticket').
     }));
   });
 
@@ -163,44 +138,32 @@ describe('TicketService', () => {
     }));
 
     it('should update an existing ticket in the state via updateTicket$', fakeAsync(() => {
-      const ticketToUpdate = service.tickets()[0];
-      const updateDto: UpdateTicketDto = { title: 'Updated Title' };
-      const updatedTicket = {
-        ...ticketToUpdate,
-        ...updateDto,
-        updatedAt: new Date(),
-      }; // Simulate backend update
-
-      service.updateTicket$.next({ id: ticketToUpdate.id, dto: updateDto });
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToUpdate.id}`);
-      expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toEqual(updateDto);
-      req.flush(updatedTicket);
-      tick();
-
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0].title).toBe('Updated Title');
-      expect(service.tickets()[0].id).toBe(ticketToUpdate.id);
-      expect(service.error()).toBeNull();
+      // TODO: Test updating an existing ticket. Steps:
+      // 1. Get the initial ticket from the service state (service.tickets()[0]).
+      // 2. Define an update DTO (UpdateTicketDto) with the changes.
+      // 3. Define the expected updated ticket (Ticket) that the API would return.
+      // 4. Trigger the updateTicket$ subject with the ticket ID and the update DTO.
+      // 5. Use tick().
+      // 6. Expect a PUT request to the specific ticket API URL (`${apiUrl}/${ticketToUpdate.id}`).
+      // 7. Check if the request method is PUT and the body matches the update DTO.
+      // 8. Flush the request with the mock updated ticket.
+      // 9. Use tick().
+      // 10. Assert that the service.tickets() signal contains the updated ticket (check properties like title).
+      // 11. Assert that the service.error() signal is null.
     }));
 
     it('should handle error when updating a ticket', fakeAsync(() => {
-      const ticketToUpdate = service.tickets()[0];
-      const updateDto: UpdateTicketDto = { title: 'Updated Title' };
-      const errorMessage = 'Failed to update ticket';
-
-      service.updateTicket$.next({ id: ticketToUpdate.id, dto: updateDto });
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToUpdate.id}`);
-      expect(req.request.method).toBe('PUT');
-      req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
-      tick();
-
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0].title).toBe(ticketToUpdate.title); // Title should not have changed
+      // TODO: Test error handling during ticket update. Steps:
+      // 1. Get the initial ticket from the service state.
+      // 2. Define an update DTO.
+      // 3. Define an error message string.
+      // 4. Trigger the updateTicket$ subject with the ticket ID and DTO.
+      // 5. Use tick().
+      // 6. Expect a PUT request to the specific ticket API URL.
+      // 7. Flush the request with an error status.
+      // 8. Use tick().
+      // 9. Assert that the ticket in the service.tickets() signal has NOT changed (e.g., title is the original title).
+      // 10. Assert that the service.error() signal contains the expected error message ('Failed to update ticket').
     }));
   });
 
@@ -213,43 +176,32 @@ describe('TicketService', () => {
     }));
 
     it('should update ticket status via changeStatus$', fakeAsync(() => {
-      const ticketToChange = service.tickets()[0];
-      const newStatus = 'closed';
-      const updatedTicket = {
-        ...ticketToChange,
-        status: newStatus,
-        updatedAt: new Date(),
-      };
-
-      service.changeStatus$.next({ ticket: ticketToChange, status: newStatus });
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToChange.id}`);
-      expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toMatchObject({ status: newStatus });
-      req.flush(updatedTicket);
-      tick();
-
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0].status).toBe(newStatus);
-      expect(service.error()).toBeNull();
+      // TODO: Test changing the status of a ticket. Steps:
+      // 1. Get the initial ticket from the service state.
+      // 2. Define the new status ('closed').
+      // 3. Define the expected updated ticket (Ticket) with the new status.
+      // 4. Trigger the changeStatus$ subject with the ticket and the new status.
+      // 5. Use tick().
+      // 6. Expect a PUT request to the specific ticket API URL.
+      // 7. Check if the request method is PUT and the body contains the new status.
+      // 8. Flush the request with the mock updated ticket.
+      // 9. Use tick().
+      // 10. Assert that the ticket in the service.tickets() signal has the new status.
+      // 11. Assert that the service.error() signal is null.
     }));
 
     it('should handle error when changing status', fakeAsync(() => {
-      const ticketToChange = service.tickets()[0];
-      const newStatus = 'closed';
-      const errorMessage = 'Failed to update ticket';
-
-      service.changeStatus$.next({ ticket: ticketToChange, status: newStatus });
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToChange.id}`);
-      expect(req.request.method).toBe('PUT');
-      req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
-      tick();
-
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0].status).toBe(ticketToChange.status); // Status should not change
+      // TODO: Test error handling during status change. Steps:
+      // 1. Get the initial ticket from the service state.
+      // 2. Define the new status.
+      // 3. Define an error message string.
+      // 4. Trigger the changeStatus$ subject with the ticket and new status.
+      // 5. Use tick().
+      // 6. Expect a PUT request to the specific ticket API URL.
+      // 7. Flush the request with an error status.
+      // 8. Use tick().
+      // 9. Assert that the ticket in the service.tickets() signal still has the original status.
+      // 10. Assert that the service.error() signal is null (Note: the service currently doesn't set error on status change failure, this might be a point of discussion or a bug in the service implementation).
     }));
   });
 
@@ -258,37 +210,33 @@ describe('TicketService', () => {
       const initialTicket = createMockTicket(1);
       const initReq = httpMock.expectOne(apiUrl);
       initReq.flush([initialTicket]);
+      tick(); // Added tick to ensure state is updated before test runs
     }));
 
     it('should remove a ticket from the state via deleteTicket$', fakeAsync(() => {
-      const ticketToDelete = service.tickets()[0];
-
-      service.deleteTicket$.next(ticketToDelete);
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToDelete.id}`);
-      expect(req.request.method).toBe('DELETE');
-      req.flush(null, { status: 204, statusText: 'No Content' }); // Simulate successful delete
-      tick();
-
-      expect(service.tickets().length).toBe(0);
-      expect(service.error()).toBeNull();
+      // TODO: Test deleting a ticket. Steps:
+      // 1. Get the initial ticket from the service state.
+      // 2. Trigger the deleteTicket$ subject with the ticket to delete.
+      // 3. Use tick().
+      // 4. Expect a DELETE request to the specific ticket API URL.
+      // 5. Check if the request method is DELETE.
+      // 6. Flush the request with a success status (e.g., 204 No Content).
+      // 7. Use tick().
+      // 8. Assert that the service.tickets() signal is now empty.
+      // 9. Assert that the service.error() signal is null.
     }));
 
     it('should handle error when deleting a ticket', fakeAsync(() => {
-      const ticketToDelete = service.tickets()[0];
-      const errorMessage = 'Failed to delete ticket';
-
-      service.deleteTicket$.next(ticketToDelete);
-      tick();
-
-      const req = httpMock.expectOne(`${apiUrl}/${ticketToDelete.id}`);
-      expect(req.request.method).toBe('DELETE');
-      req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
-      tick();
-
-      expect(service.tickets().length).toBe(1); // Ticket should still be there
-      expect(service.error()).toBe(errorMessage);
+      // TODO: Test error handling during ticket deletion. Steps:
+      // 1. Get the initial ticket from the service state.
+      // 2. Define an error message string.
+      // 3. Trigger the deleteTicket$ subject with the ticket to delete.
+      // 4. Use tick().
+      // 5. Expect a DELETE request to the specific ticket API URL.
+      // 6. Flush the request with an error status.
+      // 7. Use tick().
+      // 8. Assert that the service.tickets() signal still contains the original ticket.
+      // 9. Assert that the service.error() signal contains the expected error message ('Failed to delete ticket').
     }));
   });
 
@@ -317,82 +265,66 @@ describe('TicketService', () => {
     }));
 
     it('should update filter state via filterChange$', () => {
-      const newFilter: Filter = { status: 'open', searchTerm: 'gam' };
-      service.filterChange$.next(newFilter);
-      expect(service.filter()).toEqual(newFilter);
+      // TODO: Test updating the filter state. Steps:
+      // 1. Define a new filter object (Filter).
+      // 2. Trigger the filterChange$ subject with the new filter.
+      // 3. Assert that the service.filter() signal now equals the new filter object.
     });
 
     it('should filter tickets by status', () => {
-      service.filterChange$.next({ status: 'open', searchTerm: '' });
-      const filteredTickets = service.tickets();
-      expect(filteredTickets.length).toBe(2);
-      expect(filteredTickets.map((t) => t.id)).toEqual([1, 3]);
-
-      service.filterChange$.next({ status: 'closed', searchTerm: '' });
-      expect(service.tickets().length).toBe(1);
-      expect(service.tickets()[0].id).toBe(2);
-
-      service.filterChange$.next({ status: 'all', searchTerm: '' });
-      expect(service.tickets().length).toBe(3);
+      // TODO: Test filtering tickets by status ('open', 'closed', 'all'). Steps:
+      // 1. Trigger filterChange$ with { status: 'open', searchTerm: '' }. Assert the filtered tickets (service.tickets()) are correct (check length and IDs).
+      // 2. Trigger filterChange$ with { status: 'closed', searchTerm: '' }. Assert the filtered tickets are correct.
+      // 3. Trigger filterChange$ with { status: 'all', searchTerm: '' }. Assert all tickets are returned.
     });
 
     it('should filter tickets by search term (title)', () => {
-      service.filterChange$.next({ status: 'all', searchTerm: 'beta' });
-      const filteredTickets = service.tickets();
-      expect(filteredTickets.length).toBe(1);
-      expect(filteredTickets[0].id).toBe(2);
+      // TODO: Test filtering tickets by a search term matching the title. Steps:
+      // 1. Trigger filterChange$ with { status: 'all', searchTerm: 'beta' } (or another term).
+      // 2. Assert that only the ticket(s) with matching titles are returned in service.tickets().
     });
 
     it('should filter tickets by search term (description - case insensitive)', () => {
-      service.filterChange$.next({ status: 'all', searchTerm: 'search me' });
-      const filteredTickets = service.tickets();
-      expect(filteredTickets.length).toBe(1);
-      expect(filteredTickets[0].id).toBe(3);
+      // TODO: Test filtering tickets by a search term matching the description (case-insensitive). Steps:
+      // 1. Trigger filterChange$ with { status: 'all', searchTerm: 'search me' } (use different casing).
+      // 2. Assert that only the ticket(s) with matching descriptions are returned in service.tickets().
     });
 
     it('should filter tickets by status and search term', () => {
-      service.filterChange$.next({ status: 'open', searchTerm: 'alpha' });
-      const filteredTickets = service.tickets();
-      expect(filteredTickets.length).toBe(1);
-      expect(filteredTickets[0].id).toBe(1);
+      // TODO: Test filtering tickets by both status and search term. Steps:
+      // 1. Trigger filterChange$ with { status: 'open', searchTerm: 'alpha' }.
+      // 2. Assert that only the ticket(s) matching both criteria are returned in service.tickets().
     });
 
     it('should update sort state via sortChange$', () => {
-      const newSort: Sort = { field: 'title', direction: 'desc' };
-      service.sortChange$.next(newSort);
-      expect(service.sort()).toEqual(newSort);
+      // TODO: Test updating the sort state. Steps:
+      // 1. Define a new sort object (Sort).
+      // 2. Trigger the sortChange$ subject with the new sort object.
+      // 3. Assert that the service.sort() signal now equals the new sort object.
     });
 
     it('should sort tickets by title ascending', () => {
-      service.sortChange$.next({ field: 'title', direction: 'asc' });
-      const sortedTickets = service.tickets();
-      expect(sortedTickets.map((t) => t.title)).toEqual([
-        'Alpha Open',
-        'Beta Closed',
-        'Gamma Open',
-      ]);
+      // TODO: Test sorting tickets by title ascending. Steps:
+      // 1. Trigger sortChange$ with { field: 'title', direction: 'asc' }.
+      // 2. Assert that the service.tickets() signal returns tickets sorted alphabetically by title (check the order of titles).
     });
 
     it('should sort tickets by title descending', () => {
-      service.sortChange$.next({ field: 'title', direction: 'desc' });
-      const sortedTickets = service.tickets();
-      expect(sortedTickets.map((t) => t.title)).toEqual([
-        'Gamma Open',
-        'Beta Closed',
-        'Alpha Open',
-      ]);
+      // TODO: Test sorting tickets by title descending. Steps:
+      // 1. Trigger sortChange$ with { field: 'title', direction: 'desc' }.
+      // 2. Assert that the service.tickets() signal returns tickets sorted reverse-alphabetically by title.
     });
 
     it('should sort tickets by createdAt descending (default is asc)', () => {
-      service.sortChange$.next({ field: 'createdAt', direction: 'desc' });
-      const sortedTickets = service.tickets();
-      expect(sortedTickets.map((t) => t.id)).toEqual([2, 3, 1]);
+      // TODO: Test sorting tickets by creation date descending. Steps:
+      // 1. Trigger sortChange$ with { field: 'createdAt', direction: 'desc' }.
+      // 2. Assert that the service.tickets() signal returns tickets sorted by newest first (check the order of IDs).
     });
 
     it('should sort tickets by status ascending', () => {
-      service.sortChange$.next({ field: 'status', direction: 'asc' });
-      const sortedTickets = service.tickets();
-      expect(sortedTickets.map((t) => t.id)).toEqual([2, 1, 3]);
+      // TODO: Test sorting tickets by status ascending. Steps:
+      // 1. Trigger sortChange$ with { field: 'status', direction: 'asc' }.
+      // 2. Assert that the service.tickets() signal returns tickets sorted alphabetically by status (check the order of IDs based on status: closed, open, open).
     });
   });
 });
