@@ -4,7 +4,7 @@ import {
 } from '@angular/common/http/testing';
 import { TicketsService } from './tickets.service';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { Ticket } from './ticket.model';
+import { CreateTicketDto, Ticket } from './ticket.model';
 import { provideHttpClient } from '@angular/common/http';
 
 describe('TicketService', () => {
@@ -104,15 +104,34 @@ describe('TicketService', () => {
     it('should add a new ticket to the state via createTicket$', fakeAsync(() => {
       // TODO: Test adding a new ticket. Steps:
       // 1. Define a new ticket DTO (CreateTicketDto).
+      const ticketDto: CreateTicketDto = {
+        title: 'New Ticket',
+        description: 'Description for new ticket',
+        status: 'open',
+      };
       // 2. Define the expected created ticket (Ticket) that the API would return (including ID, dates).
+      const createdTicket: Ticket = {
+        id: 1,
+        ...ticketDto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       // 3. Trigger the createTicket$ subject with the DTO.
+      service.createTicket$.next(ticketDto);
       // 4. Use tick() to simulate the passage of time for async operations.
+      tick();
       // 5. Expect a POST request to the API URL (httpMock.expectOne).
+      const req = httpMock.expectOne(apiUrl);
       // 6. Check if the request method is POST and the body matches the DTO.
+      expect(req.request.method).toBe('POST');
       // 7. Flush the request with the mock created ticket.
+      req.flush(createdTicket);
       // 8. Use tick() again.
+      tick();
       // 9. Assert that the service.tickets() signal now contains the created ticket.
+      expect(service.tickets()).toEqual([createdTicket]);
       // 10. Assert that the service.error() signal is null.
+      expect(service.error()).toBeNull();
     }));
 
     it('should handle error when creating a ticket', fakeAsync(() => {
